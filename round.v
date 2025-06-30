@@ -40,10 +40,7 @@ module round( output wire [ 31 : 0 ] rl,
 
   // Stage 1: complete this module implementation
   assign rl =  xr;
-  
-  wire [47:0]xorRes;
-  wire [47:0]perm1Res;
-
+    
   wire [5:0] r0;
   wire [5:0] r1;
   wire [5:0] r2;
@@ -52,6 +49,9 @@ module round( output wire [ 31 : 0 ] rl,
   wire [5:0] r5;
   wire [5:0] r6;
   wire [5:0] r7;
+
+  wire [47:0]perm1Res;
+  wire [47:0]xorRes;
 
   perm_E per1(.r(perm1Res),.x(xr));
 
