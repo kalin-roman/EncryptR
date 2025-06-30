@@ -16,17 +16,14 @@ module key_schedule( output wire [ 55 : 0 ] r,
   wire [27:0] r1; 
   wire [27:0] r2; 
   wire [27:0] r3;
-  wire [55:0] result;
 
   split_0 sp1(.r1(r1), .r0(r0), .x(x));
 
   clr_28bit clr1(.r(r2), .y(i), .x(r1));
   clr_28bit clr2(.r(r3), .y(i), .x(r0));
 
-  merge_0 mer(.r(result), .x1(r2), .x0(r3));
+  merge_0 mer(.r(r), .x1(r2), .x0(r3));
 
-  perm_PC2 per(.r(k), .x(result));
-  
-  assign r = result;
+  perm_PC2 per(.r(k), .x(r));
 
 endmodule
