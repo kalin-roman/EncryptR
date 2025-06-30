@@ -1,0 +1,79 @@
+$date
+	Mon Jun 30 13:29:25 2025
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1s
+$end
+$scope module clr_28bit_test $end
+$var wire 28 ! t_r [27:0] $end
+$var reg 28 " t_x [27:0] $end
+$var reg 4 # t_y [3:0] $end
+$scope module t $end
+$var wire 28 $ r [27:0] $end
+$var wire 28 % x [27:0] $end
+$var wire 4 & y [3:0] $end
+$var wire 2 ' shiftVal [1:0] $end
+$var wire 28 ( rightShift [27:0] $end
+$var wire 28 ) leftShift [27:0] $end
+$scope module s $end
+$var wire 1 * isCase $end
+$var wire 1 + w0 $end
+$var wire 1 , w1 $end
+$var wire 1 - w2 $end
+$var wire 4 . y [3:0] $end
+$var wire 16 / zoef [15:0] $end
+$var wire 2 0 res [1:0] $end
+$var wire 16 1 mask [15:0] $end
+$var wire 4 2 cnc [3:0] $end
+$upscope $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+$end
+#0
+$dumpvars
+b1000 2
+b110001111 1
+b1 0
+b110001111 /
+b0 .
+0-
+1,
+0+
+1*
+b1010101001100110000111111110 )
+b0 (
+b1 '
+b0 &
+b101010100110011000011111111 %
+b1010101001100110000111111110 $
+b0 #
+b101010100110011000011111111 "
+b1010101001100110000111111110 !
+$end
+#20
+$dumpoff
+bx 2
+bx 1
+bx 0
+bx /
+bx .
+x-
+x,
+x+
+x*
+bx )
+bx (
+bx '
+bx &
+bx %
+bx $
+bx #
+bx "
+bx !
+$end
