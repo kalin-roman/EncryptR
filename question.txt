@@ -47,8 +47,8 @@ reasoning about these latter aspects forms part of the assessment, so they
 are not (necessarily) detailed explicitly.
 
     Stage 1 : implement
-[?]           - clr_28bit    module                                  ( 20%)
-[?]           - key_schedule module                                  ( 10%)
+[X]           - clr_28bit    module                                  ( 20%)
+[X]           - key_schedule module                                  ( 10%)
 [?]           - round        module                                  ( 10%)
 
 [?] Stage 2 : implement encrypt_comb module, combinatorial design    ( 20%)
