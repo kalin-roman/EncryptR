@@ -29,6 +29,21 @@ module encrypt_comb(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
 
   // Stage 2: complete this module implementation
 
+  wire [`N_B : 0] message [0 : `N_R];
+  wire [55 : 0] key [0 : `N_R];
+  ы
+  wire [55 : 0] preprokey;
+
+  pre_processing pre(.r0(message[0][31 : 0]), .r1(message[0][63:32], 
+                     .r(preprokey),              .m(m), .k(k)), );
+  genvar i;
+
+  generate
+    for (i = 1 ; i <= `N_R; i++) begin
+      key_schedule keyMod(.k[],.r(),.x(),.i());
+      round ro(.rr(message[i][31 : 0]), .rl(message[i][63 : 32]), key[0]);
+    end
+  endgenerate
 
 
 endmodule
