@@ -61,27 +61,47 @@ module encrypt_iter(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
   wire [ `N_B - 1 : 0 ] testExampStart [0 : `N_R - 1];
   wire [ `N_K - 1 : 0 ] testExampEnd [0 : `N_R - 1];
 
-  wire [ `N_K - 1 : 0 ] testExampKey [0 : `N_R - 1];
+
+
+
+  reg [ `N_B - 1 : 0 ] startM;
+  reg [ `N_K - 1 : 0 ] startK;
+
+
+  wire [ 47 : 0 ] testExampKey [0 : `N_R - 1];
   wire [ `N_B - 1 : 0 ] testExampMess [0 : `N_R - 1];
+  wire [ 55 : 0 ] testExampTranKey [0 : `N_R - 1];
+
+  pre_processing preP(.r0(testExampMess[0][31 : 0]), 
+                      .r1(testExampMess[0][63 : 32]), 
+                      .r(testExampTranKey[0]), 
+                      .k(startK),
+                      .m(startM));
+
+  key_schedule ke(.r(testExampTranKey[rnd + 4'b0001]),
+                  .k(testExampKey[rnd]) ,
+                  .i(rnd), 
+                  .x(testExampTranKey[rnd]));
+
+  round rou(.rl(testExampMess[rnd + 4'b0001][63 : 32]), .rr(testExampMess[rnd + 4'b0001][31 : 0]), 
+            .xl(testExampMess[rnd][63 : 32]), .xr(testExampMess[rnd][63 : 32]), 
+            .k(testExampKey[rnd]));
+
+  post_processing postP(.r(c),.x0(testExampMess[rnd + 4'b0001][63 : 32]),.x1(testExampMess[rnd + 4'b0001][31 : 0]));
 
 
-  pre_processing preP(.r0(testExampMess[1][31 : 0]), 
-                      .r1(testExampMess[1][63 : 32]), 
-                      .r(testExampKey1), 
-                      .k(testExampKey[0]),
-                      .m(testExampMess[0]));
-
-  key_schedule ke(.r(testExampKey[rnd]),);
-  round rou();
-  post_processing postP(.r(c), );
-
-  always @(rst) begin
-    
-  end
+  // integer o;
+  // always @(rst) begin
+  //   for ( o = 0 ; i < `N_R; i++) begin
+  //     testExampKey[o] = 0;
+  //     testExampMess[o] = 0;
+  //     testExampTranKey[o] =0;
+  //   end
+  // end
 
   always @(req) begin
-    testExampStart[0] = m;
-    testExampEnd[0] = k;
+    startM = m;
+    startK = k;
     rnd = 4'b0000;
   end
 
@@ -90,7 +110,7 @@ module encrypt_iter(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
       startK = endK;
       startM = endM;
       rnd <= rnd + 5'b00001;
-      if ( rnd >= `N_R )begin
+      if ( rnd >= `N_R  )begin
         ackC <= 1;
       end 
     end
