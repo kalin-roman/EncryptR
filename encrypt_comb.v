@@ -59,16 +59,6 @@ module encrypt_comb(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
   );
 
   genvar i;
-  // initial begin
-  //   #1 $display("-i = 0. \n-xl = %h \n-xr = %h \n-k = %h \n-rl = %h \n-rr = %h \n",
-              
-  //             messages[0][63 : 32], 
-  //             messages[0][31 : 0],
-  //             kForRound[0], 
-  //             messages[1][63 : 32],
-  //             messages[1][31 : 0]);
-
-  // end
   generate
     for (i = 1 ; i <= `N_R; i++) begin:id
       
@@ -86,16 +76,6 @@ module encrypt_comb(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
           .xr(messages[i - 1][31 : 0]),
           .k (kForRound[i - 1])
       );
-      // initial begin
-      //   #1 $display("-i =%d. \n-xl = %h \n-xr = %h \n-k = %h \n-rl = %h \n-rr = %h \n",
-      //             i,
-      //             messages[i - 1][63 : 32], 
-      //             messages[i - 1][31 : 0],
-      //             kForRound[i - 1], 
-      //             messages[i][63 : 32],
-      //             messages[i][31 : 0]);
-
-      // end
     end
 
   endgenerate
