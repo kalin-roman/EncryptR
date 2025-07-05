@@ -35,7 +35,10 @@ module post_processing(input wire [ 31 : 0 ]   x0,   //  input    data: cipher k
   merge_2 mer(.r(merRes), .x0(x0), .x1(x1));
 
   perm_FP per(.r(r), .x(merRes));
-
+  // initial begin
+  //     $monitor( "merRes=%h", merRes);
+  //     $monitor( "r=%h", startK);      
+  // end
 
 endmodule
 
@@ -49,70 +52,107 @@ module encrypt_iter(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
                      output wire                  ack ); // output control: acknowledge signal
 
   // Stage 3: complete this module implementation
-  reg [ 4 : 0 ] rnd;
+  reg [ 3 : 0 ] rnd;
   reg ackC;
 
-  reg [ `N_B - 1 : 0 ] startM;
-  reg [ `N_K - 1 : 0 ] startK;
+  wire [ `N_B - 1 : 0 ] firstM;
+  wire [ 55: 0 ] firstK;
 
-  wire [ `N_B - 1 : 0 ] endM;
-  wire [ `N_K - 1 : 0 ] endK;
+  wire [ `N_B - 1 : 0 ] startM;
+  wire [ 55 : 0 ] startK;
 
-  wire [ `N_B - 1 : 0 ] testExampStart [0 : `N_R - 1];
-  wire [ `N_K - 1 : 0 ] testExampEnd [0 : `N_R - 1];
+  reg [55 : 0] forKeySched;
+  reg [63 : 0] forRound;
 
+  wire [ 47 : 0 ] roundKey;
 
+  pre_processing preP(.r0(startM[31 : 0]), 
+                      .r1(startM[63 : 32]), 
+                      .r(startK), 
+                      .k(k),
+                      .m(m));
 
-
-  reg [ `N_B - 1 : 0 ] startM;
-  reg [ `N_K - 1 : 0 ] startK;
-
-
-  wire [ 47 : 0 ] testExampKey [0 : `N_R - 1];
-  wire [ `N_B - 1 : 0 ] testExampMess [0 : `N_R - 1];
-  wire [ 55 : 0 ] testExampTranKey [0 : `N_R - 1];
-
-  pre_processing preP(.r0(testExampMess[0][31 : 0]), 
-                      .r1(testExampMess[0][63 : 32]), 
-                      .r(testExampTranKey[0]), 
-                      .k(startK),
-                      .m(startM));
-
-  key_schedule ke(.r(testExampTranKey[rnd + 4'b0001]),
-                  .k(testExampKey[rnd]) ,
+  key_schedule ke(.r(firstK),
+                  .k(roundKey),
                   .i(rnd), 
-                  .x(testExampTranKey[rnd]));
+                  .x(forKeySched));
 
-  round rou(.rl(testExampMess[rnd + 4'b0001][63 : 32]), .rr(testExampMess[rnd + 4'b0001][31 : 0]), 
-            .xl(testExampMess[rnd][63 : 32]), .xr(testExampMess[rnd][63 : 32]), 
-            .k(testExampKey[rnd]));
+  round rou(.rl(firstM[63 : 32]), .rr(firstM[31 : 0]), 
+            .xl(forRound[63 : 32]), .xr(forRound[31 : 0]), 
+            .k(roundKey));
 
-  post_processing postP(.r(c),.x0(testExampMess[rnd + 4'b0001][63 : 32]),.x1(testExampMess[rnd + 4'b0001][31 : 0]));
+  post_processing postP(.r(c),
+                        .x0(firstM[63 : 32]),
+                        .x1(firstM[31 : 0]));
 
+  // initial begin
+      // #15 $monitor( "xl=%h \n xr=%h \n k=%h \n rl=%h \n rr=%h \n rnd=%h \n ack = %h\n", 
+      //            forRound[63 : 32],
+      //            forRound[31 : 0],
+      //            roundKey,
+      //            firstM[63 : 32],
+      //            firstM[31 : 0],
+      //            rnd,
+      //            ackC
+      //            );  
 
-  // integer o;
-  // always @(rst) begin
-  //   for ( o = 0 ; i < `N_R; i++) begin
-  //     testExampKey[o] = 0;
-  //     testExampMess[o] = 0;
-  //     testExampTranKey[o] =0;
-  //   end
+      // $monitor( " r0 =%h \n r1 =%h \n r =%h \n m =%h \n k =%h \nrnd =%h \n ack = %h\n", 
+      //       startM[63 : 32],
+      //       startM[31 : 0],
+      //       startK,
+      //       k,
+      //       m,
+      //       rnd,
+      //       ackC
+      //       );     
+
+      // $monitor( " x =%h \n i =%h \n r =%h \n k =%h \n ack = %h \n", 
+      //       forKeySched,
+      //       rnd,
+      //       roundKey,
+      //       firstK,
+      //       ackC
+      //       );    
+      // $monitor( "rst = %h", 
+      //      rst
+      //       );    
   // end
 
-  always @(req) begin
-    startM = m;
-    startK = k;
+  assign ack = ackC;
+
+  // always @(rst) begin
+  //   // firstM = 0;
+  //   // firstK = 0;
+  //   forKeySched = 0;
+  //   forRound = 0;
+  //   // startM = 0;
+  //   // startK = 0;
+  //   rnd = 4'b0000;
+  //   ackC = 0;
+  // end
+
+  always @(negedge req) begin
+    ackC = 1'b0;
+    forKeySched = 0;
+    forRound = 0;
     rnd = 4'b0000;
   end
 
   always @(posedge clk) begin
     if (req) begin
-      startK = endK;
-      startM = endM;
-      rnd <= rnd + 5'b00001;
-      if ( rnd >= `N_R  )begin
-        ackC <= 1;
-      end 
+      if ( rnd < `N_R - 1)begin
+        if (forKeySched == 0) begin
+          forKeySched = startK;
+          forRound = startM;
+        end else begin
+          forKeySched = firstK;
+          forRound = firstM;
+          rnd <= rnd + 4'b0001;
+        end
+      end else begin
+        ackC = 1;
+      end
+
     end
 
   end
