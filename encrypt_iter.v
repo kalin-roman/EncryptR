@@ -52,19 +52,20 @@ module encrypt_iter(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
                      output wire                  ack ); // output control: acknowledge signal
 
   // Stage 3: complete this module implementation
-  reg [ 3 : 0 ] rnd;
-  reg ackC;
 
-  wire [ `N_B - 1 : 0 ] firstM;
-  wire [ 55: 0 ] firstK;
+  reg [ 3 : 0 ] rnd; // keep track of number of rounds
+  reg ackC;// keep track of is computation is finished
 
-  wire [ `N_B - 1 : 0 ] startM;
-  wire [ 55 : 0 ] startK;
+  wire [ `N_B - 1 : 0 ] firstM; // to store computed message from round
+  wire [ 55: 0 ] firstK; // to store 
 
-  reg [55 : 0] forKeySched;
-  reg [63 : 0] forRound;
+  wire [ `N_B - 1 : 0 ] startM;// to store computed message from preprocessing
+  wire [ 55 : 0 ] startK;// to store computed key from preprocessing
 
-  wire [ 47 : 0 ] roundKey;
+  reg [55 : 0] forKeySched; // to pass key through rounds
+  reg [63 : 0] forRound; // to pass message through rounds
+
+  wire [ 47 : 0 ] roundKey;// result of keyschedule for round module
 
   pre_processing preP(.r0(startM[31 : 0]), 
                       .r1(startM[63 : 32]), 
@@ -85,53 +86,10 @@ module encrypt_iter(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
                         .x0(firstM[63 : 32]),
                         .x1(firstM[31 : 0]));
 
-  // initial begin
-      // #15 $monitor( "xl=%h \n xr=%h \n k=%h \n rl=%h \n rr=%h \n rnd=%h \n ack = %h\n", 
-      //            forRound[63 : 32],
-      //            forRound[31 : 0],
-      //            roundKey,
-      //            firstM[63 : 32],
-      //            firstM[31 : 0],
-      //            rnd,
-      //            ackC
-      //            );  
+  assign ack = ackC;//change the acknoledge signal 
 
-      // $monitor( " r0 =%h \n r1 =%h \n r =%h \n m =%h \n k =%h \nrnd =%h \n ack = %h\n", 
-      //       startM[63 : 32],
-      //       startM[31 : 0],
-      //       startK,
-      //       k,
-      //       m,
-      //       rnd,
-      //       ackC
-      //       );     
-
-      // $monitor( " x =%h \n i =%h \n r =%h \n k =%h \n ack = %h \n", 
-      //       forKeySched,
-      //       rnd,
-      //       roundKey,
-      //       firstK,
-      //       ackC
-      //       );    
-      // $monitor( "rst = %h", 
-      //      rst
-      //       );    
-  // end
-
-  assign ack = ackC;
-
-  // always @(rst) begin
-  //   // firstM = 0;
-  //   // firstK = 0;
-  //   forKeySched = 0;
-  //   forRound = 0;
-  //   // startM = 0;
-  //   // startK = 0;
-  //   rnd = 4'b0000;
-  //   ackC = 0;
-  // end
-
-  always @(negedge req) begin
+  // on negative edge of req or positive level of rst signal reset all register to default values
+  always @(negedge req or rst) begin
     ackC = 1'b0;
     forKeySched = 0;
     forRound = 0;
@@ -139,22 +97,20 @@ module encrypt_iter(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
   end
 
   always @(posedge clk) begin
-    if (req) begin
-      if ( rnd < `N_R - 1)begin
-        if (forKeySched == 0) begin
+    if (req) begin //check that was requested to make computation
+      if ( rnd < `N_R - 1)begin // check if we not exceeded the number of needed rounds
+        if (forKeySched == 0) begin // check if it is a round for preprocessing
           forKeySched = startK;
           forRound = startM;
-        end else begin
+        end else begin // if it is not preprocessing round, then round and keyschedule start compute
           forKeySched = firstK;
           forRound = firstM;
           rnd <= rnd + 4'b0001;
         end
       end else begin
-        ackC = 1;
+        ackC = 1;// change acknoledge to tell that computation is finished
       end
-
     end
-
   end
 
 endmodule
