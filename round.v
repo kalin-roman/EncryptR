@@ -36,7 +36,7 @@ module round( output wire [ 31 : 0 ] rl,
               output wire [ 31 : 0 ] rr,
                input wire [ 31 : 0 ] xl,
                input wire [ 31 : 0 ] xr,
-               input wire [ 47 : 0 ] k );
+               input wire [ 47 : 0 ] k);
 
   // Stage 1: complete this module implementation
   assign rl =  xr;
@@ -98,5 +98,6 @@ module round( output wire [ 31 : 0 ] rl,
   multipXor32 mulXor2(.xorRes(xorRes2),.permR(perm2Res), .k(xl));
 
   assign rr = xorRes2;
+
 
 endmodule

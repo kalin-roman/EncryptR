@@ -98,7 +98,7 @@ module encrypt_iter(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
 
   always @(posedge clk) begin
     if (req) begin //check that was requested to make computation
-      if ( rnd < `N_R - 1)begin // check if we not exceeded the number of needed rounds
+      if ( rnd < `N_R - 1) begin // check if we not exceeded the number of needed rounds
         if (forKeySched == 0) begin // check if it is a round for preprocessing
           forKeySched = startK;
           forRound = startM;
