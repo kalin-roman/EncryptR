@@ -35,13 +35,6 @@ module post_processing(input wire [ 31 : 0 ]   x0,   //  input    data: cipher k
   merge_2 mer(.r(merRes), .x0(x0), .x1(x1));
 
   perm_FP per(.r(r), .x(merRes));
-  // initial begin
-  //     $monitor( "merRes=%h", merRes);
-  //     $monitor( "r=%h", startK);      
-  // end
-  // always @(r) begin
-  //   $display("pp: x0= %h, x1= %h, r=%d, n=%d",  x0, x1, r);
-  // end
 
 endmodule
 
@@ -56,30 +49,29 @@ module encrypt_pipe(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
 
 
   // Stage 4: complete this module implementation
-reg [1 : 0]start;
-reg [3 : 0] ticks;
-reg [3 : 0] pipline;
+reg [1 : 0] start;                          // flag to start messages encryption 
+reg [3 : 0] pipline;                        // counter of incoming message 
 
-reg [55 : 0] k0 [0 : `N_V - 1];
-reg [63 : 0] m0 [0 : `N_V - 1];
-reg [63 : 0 ] c0 [0 : `N_V - 1];
+reg [55 : 0] k0 [0 : `N_V - 1];             // array of keys for input paramters of key_schedule()
+reg [`N_B - 1 : 0] m0 [0 : `N_V - 1];       // array of messages for round()
+reg [`N_B - 1 : 0 ] c0 [0 : `N_V - 1];
 
-reg [3:0] iR [0 : `N_V - 1]; // number of round for each input
+reg [4:0] iR [0 : `N_V - 1];                // number of rounds for message encrytion
 
-wire [47 : 0] forRound [0 : `N_V - 1];
+reg [ `N_B - 1 : 0 ] firstM [0 : `N_V - 1]; // to store computed message from key_schedule()
+reg [ 55: 0 ] firstK [0 : `N_V - 1];        // to store computed message from round()
 
-reg [ `N_B - 1 : 0 ] firstM [0 : `N_V - 1]; // to store computed message from round
-reg [ 55: 0 ] firstK [0 : `N_V - 1]; // to store 
+reg [`N_B - 1 : 0]res;                      // final result     
 
-reg [`N_B - 1 : 0]res;
+wire [55 : 0] startK;                       // computed key from pre_proessing()  
+wire [`N_B - 1 : 0] startM;                 // computed message from pre_proessing()
+wire [47 : 0] keyForRound [0 : `N_V - 1];   // keys that passes from keyschedule to round() 
 
-
-wire [55 : 0] startK;
-wire [`N_B - 1 : 0] startM;
-
-integer n;
-
-pre_processing pre(.r(startK),
+/*
+  Module make a pre processing of the key and plaintext message, before passing it for rounds of encryption.
+  It is called only one time for each message and key. Initialize startM and startK registers.
+*/
+pre_processing pre(.r(startK),             
                    .r0(startM[31:0]), 
                    .r1(startM[63:32]), 
                    .m(m), 
@@ -90,12 +82,12 @@ genvar i;
 generate
   for ( i = 0; i < `N_V; i++) begin: id
     key_schedule ke(.r(firstK[i]),
-                    .k(forRound[i]),
-                    .i(iR[i]), // (ticks - i[3:0] - 4'b0001) working
+                    .k(keyForRound[i]),
+                    .i((iR[i][3:0])), 
                     .x(k0[i]));
-    round rou(.xl(m0[i][63:32]),.xr(m0[i][31:0]),
+    round rou(.xl(m0[i][63:32]),    .xr(m0[i][31:0]),
               .rl(firstM[i][63:32]),.rr(firstM[i][31:0]),
-              .k(forRound[i]));
+              .k(keyForRound[i]));
     post_processing po(.r(c0[i]), 
                        .x0(firstM[i][63:32]), 
                        .x1(firstM[i][31:0]));
@@ -105,55 +97,43 @@ endgenerate
 
 assign c = res;
   
-
-// initial begin
-//   for (integer i = 0;i < `N_V ; i++) begin
-//     iR[i] = 0;
-//   end
-// end
-
-always @(negedge rst) begin
-  ticks = 0;
+always @(rst) begin
   pipline = 0;
   start[1] = 1'b1;
 end
 
-always @(k) begin
+always @(k or m) begin
   start[0] = 1'b1;
 end
 
-always @(posedge rst) begin
-  res = c0[ticks]; 
-end
-
 always @(posedge clk) begin
+  // When rst toggeld and first message with key are passed, then the computation begins
   if(start == 2'b11) begin 
-
     if(pipline < `N_V) begin
+      // Save pre-processed key and message value for the first pipeline stage
       k0[pipline] = startK;
       m0[pipline] = startM;
-      // $display("[%d]: m0[%h] <<-- startM[%h]", pipline, m0[pipline], startM);
-      pipline = pipline + 1;
       iR[pipline] = 0;
-      // $display("start --- [%d]:  iR[%h]", pipline, iR[pipline]);
+      pipline = pipline + 1;
+    end 
 
-    end  
-
-    ticks = ticks + 1;
-    // $display("  k0 = %h, fK = %h ,  r = %d", k0[0], firstK[0], ticks );
-
+    /*
+      New key and encrypted message from the previous encryption round 
+      transfer to the next one. "For loop" used for each  
+    */
     #1 for (integer i = 0;i < pipline ; i++ ) begin
-      if (iR[i] < `N_R) begin
+      // Transfer message and key for the 
+      if (iR[i] < `N_R - 1) begin
         k0[i] = firstK[i];
-        m0[i] = firstM[i];  
-        iR[i] += 1 ; 
-        // $display("next --- [%d]:  iR[%h]", i, iR[i]);
-
+        m0[i] = firstM[i];
+        iR[i] += 5'b00001 ; // increment number of a round for each message
+      end else if (iR[i] >= `N_R) begin
+        // after the last encryption round, encrypted message is ready to be passed to the user
+        res = c0[i];
+      end else begin
+        iR[i] += 5'b00001;
       end
-    $display("[%d]:  c0[%h]", i, c0[i]);
     end
-      // $display("[%d]:  c0[%h]", ticks, c0[ticks]);
-
   end
 end
 
