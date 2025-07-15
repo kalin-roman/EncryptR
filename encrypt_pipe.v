@@ -49,104 +49,109 @@ module encrypt_pipe(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
 
 
   // Stage 4: complete this module implementation
-reg [1 : 0] start;                          // flag to start messages encryption 
-reg [3 : 0] pipline;                        // counter of incoming message 
+  reg [1 : 0] start;                          // flag to start messages encryption 
+  reg [3 : 0] pipline;                        // counter of incoming message 
 
-reg [55 : 0] k0 [0 : `N_V - 1];             // array of keys for input paramters of key_schedule()
-reg [`N_B - 1 : 0] m0 [0 : `N_V - 1];       // array of messages for round()
-reg [`N_B - 1 : 0 ] c0 [0 : `N_V - 1];
+  reg [55 : 0] k0 [0 : `N_V - 1];             // array of keys for input paramters of key_schedule()
+  reg [`N_B - 1 : 0] m0 [0 : `N_V - 1];       // array of messages for round()
+  reg [`N_B - 1 : 0 ] c0 [0 : `N_V - 1];
 
-reg [4:0] iR [0 : `N_V - 1];                // number of rounds for message encrytion
+  reg [4:0] iR [0 : `N_V - 1];                // number of rounds for message encrytion
 
-reg [ `N_B - 1 : 0 ] firstM [0 : `N_V - 1]; // to store computed message from round()
-reg [ 55: 0 ] firstK [0 : `N_V - 1];        // to store computed key from key_schedule()
+  reg [ `N_B - 1 : 0 ] firstM [0 : `N_V - 1]; // to store computed message from round()
+  reg [ 55: 0 ] firstK [0 : `N_V - 1];        // to store computed key from key_schedule()
 
-reg [`N_B - 1 : 0]res;                      // final result     
+  reg [`N_B - 1 : 0]res;                      // final result     
 
-wire [55 : 0] startK;                       // computed key from pre_proessing()  
-wire [`N_B - 1 : 0] startM;                 // computed message from pre_proessing()
-wire [47 : 0] keyForRound [0 : `N_V - 1];   // keys that passes from keyschedule to round() 
+  wire [55 : 0] startK;                       // computed key from pre_proessing()  
+  wire [`N_B - 1 : 0] startM;                 // computed message from pre_proessing()
+  wire [47 : 0] keyForRound [0 : `N_V - 1];   // keys that passes from keyschedule to round() 
 
-/*
-  Module make a pre processing of the key and plaintext message, before passing it for first round of encryption.
-  It is called only one time for each incoming message and key from user. Initialize startM and startK registers.
-*/
-pre_processing pre(.r(startK),             
-                   .r0(startM[31:0]), 
-                   .r1(startM[63:32]), 
-                   .m(m), 
-                   .k(k));
+  /*
+    Module make a pre processing of the key and plaintext message, before passing it for first round of encryption.
+    It is called only one time for each incoming message and key from user. Initialize startM and startK registers.
+  */
+  pre_processing pre(.r(startK),             
+                    .r0(startM[31:0]), 
+                    .r1(startM[63:32]), 
+                    .m(m), 
+                    .k(k));
 
-/*
-  This loop iterate through all messages with keys and execute related encryption round.
-*/
+  /*
+    This loop iterate through all messages with keys and execute related encryption round.
+  */
 
-genvar i;
+  genvar i;
 
-generate
-  for ( i = 0; i < `N_V; i++) begin: id
-    // Compute key for the round module and pass the new one for the next encryption round.
-    key_schedule ke(.r(firstK[i]),
-                    .k(keyForRound[i]),
-                    .i((iR[i][3:0])), 
-                    .x(k0[i]));
-    // Accept the left and right part of a previous message and encrypt it with the key form keysschedule. 
-    // Then return two encrypted parts of the message for the next round of encryption.
-    round rou(.xl(m0[i][63:32]),    .xr(m0[i][31:0]),
-              .rl(firstM[i][63:32]),.rr(firstM[i][31:0]),
-              .k(keyForRound[i]));
+  generate
+    for ( i = 0; i < `N_V; i++) begin: id
+      // Compute key for the round module and pass the new one for the next encryption round.
+      key_schedule ke(.r(firstK[i]),
+                      .k(keyForRound[i]),
+                      .i((iR[i][3:0])), 
+                      .x(k0[i]));
+      // Accept the left and right part of a previous message and encrypt it with the key form keysschedule. 
+      // Then return two encrypted parts of the message for the next round of encryption.
+      round rou(.xl(m0[i][63:32]),    .xr(m0[i][31:0]),
+                .rl(firstM[i][63:32]),.rr(firstM[i][31:0]),
+                .k(keyForRound[i]));
 
-    //Module return the final result of the encryption computation  after all encryption rounds 
-    //The result passes to c0[i] on each pipeline but the correct value the module only return on the last round.
-    post_processing po(.r(c0[i]), 
-                       .x0(firstM[i][63:32]), 
-                       .x1(firstM[i][31:0]));
+      //Module return the final result of the encryption computation  after all encryption rounds 
+      //The result passes to c0[i] on each pipeline but the correct value the module only return on the last round.
+      post_processing po(.r(c0[i]), 
+                        .x0(firstM[i][63:32]), 
+                        .x1(firstM[i][31:0]));
+      end
+
+  endgenerate
+
+  assign c = res;
+
+  // Initializing encrytion algorithm by rst signal from user
+  always @(rst) begin
+    res = 0;
+    pipline = 0;
+    start[1] = 1'b1;                          // set second bit to 1 when reset signal is recieved 
+    for (integer kk = 0; kk < `N_V ; kk++) begin
+      k0[kk] = 0;
+      m0[kk] = 0;
+      iR[kk] = 0;
     end
+  end
 
-endgenerate
+  always @(k or m) begin
+    start[0] = 1'b1;                          // set first bit to 1 when module recieved message and key for computation
+  end
 
-assign c = res;
+  always @(posedge clk) begin
+    // When rst toggeld and first message with key are passed, then the computation begins
+    if(start == 2'b11) begin 
+      if(pipline < `N_V) begin
+        // Save pre-processed key and message value for the first pipeline stage
+        k0[pipline] = startK;
+        m0[pipline] = startM;
+        iR[pipline] = 0;  // set to zero the number of rounds for the next incoming message
+        pipline = pipline + 1;
+      end 
 
-// Initializing encrytion algorithm by rst signal from user
-always @(rst) begin
-  res = 0;
-  pipline = 0;
-  start[1] = 1'b1;                          // set second bit to 1 when reset signal is recieved 
-end
-
-always @(k or m) begin
-  start[0] = 1'b1;                          // set first bit to 1 when module recieved message and key for computation
-end
-
-always @(posedge clk) begin
-  // When rst toggeld and first message with key are passed, then the computation begins
-  if(start == 2'b11) begin 
-    if(pipline < `N_V) begin
-      // Save pre-processed key and message value for the first pipeline stage
-      k0[pipline] = startK;
-      m0[pipline] = startM;
-      iR[pipline] = 0;  // set to zero the number of rounds for the next incoming message
-      pipline = pipline + 1;
-    end 
-
-    /*
-      New key and encrypted message from the previous encryption round 
-      transfer to the next one. "For loop" used for each  
-    */
-    #1 for (integer i = 0;i < pipline ; i++ ) begin
-      // Transfer message and key for the next round and next pipline
-      if (iR[i] < `N_R - 1) begin
-        k0[i] = firstK[i];
-        m0[i] = firstM[i];
-        iR[i] += 5'b00001 ; // increment number of a round for each message
-      end else if (iR[i] >= `N_R) begin
-        // after the last encryption round, encrypted message is ready to be passed to the user
-        res = c0[i];
-      end else begin
-        iR[i] += 5'b00001;
+      /*
+        New key and encrypted message from the previous encryption round 
+        transfer to the next one. "For loop" used for each  
+      */
+      #1 for (integer i = 0;i < pipline ; i++ ) begin
+        // Transfer message and key for the next round and next pipline
+        if (iR[i] < `N_R - 1) begin
+          k0[i] = firstK[i];
+          m0[i] = firstM[i];
+          iR[i] += 5'b00001 ; // increment number of a round for each message
+        end else if (iR[i] >= `N_R) begin
+          // after the last encryption round, encrypted message is ready to be passed to the user
+          res = c0[i];
+        end else begin
+          iR[i] += 5'b00001;
+        end
       end
     end
   end
-end
 
 endmodule

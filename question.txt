@@ -16,7 +16,7 @@
 So that we can calibrate and improve the assignment in the future, give us
 a rough idea how long (in hours) you spent on it *in total*:
 
-effort : [...] hours
+effort : 60 hours
 
 ===============================================================================
 
@@ -31,8 +31,7 @@ resources is allowed *iff.* it
 Let us know any third-party source code or resources you used (if any) so
 it's clear what's your work and what isn't:
 
-[...]
-
+[https://www.chipverify.com/] - used it to understatnd gate level
 ===============================================================================
 
 4. Marking
@@ -51,11 +50,11 @@ are not (necessarily) detailed explicitly.
 [X]           - key_schedule module                                  ( 10%)
 [X]           - round        module                                  ( 10%)
 
-[?] Stage 2 : implement encrypt_comb module, combinatorial design    ( 20%)
+[X] Stage 2 : implement encrypt_comb module, combinatorial design    ( 20%)
 
-[?] Stage 3 : implement encrypt_iter module, iterative     design    ( 20%)
+[X] Stage 3 : implement encrypt_iter module, iterative     design    ( 20%)
 
-[?] Stage 4 : implement encrypt_pipe module, pipelined     design    ( 20%)
+[X] Stage 4 : implement encrypt_pipe module, pipelined     design    ( 20%)
 
                                                                      ------
                                                                      (100%)
