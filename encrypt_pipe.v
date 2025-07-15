@@ -68,8 +68,8 @@ wire [`N_B - 1 : 0] startM;                 // computed message from pre_proessi
 wire [47 : 0] keyForRound [0 : `N_V - 1];   // keys that passes from keyschedule to round() 
 
 /*
-  Module make a pre processing of the key and plaintext message, before passing it for rounds of encryption.
-  It is called only one time for each message and key. Initialize startM and startK registers.
+  Module make a pre processing of the key and plaintext message, before passing it for first round of encryption.
+  It is called only one time for each incoming message and key from user. Initialize startM and startK registers.
 */
 pre_processing pre(.r(startK),             
                    .r0(startM[31:0]), 
@@ -77,17 +77,27 @@ pre_processing pre(.r(startK),
                    .m(m), 
                    .k(k));
 
+/*
+  This loop iterate through all messages with keys and execute related encryption round.
+*/
+
 genvar i;
 
 generate
   for ( i = 0; i < `N_V; i++) begin: id
+    // Compute key for the round module and pass the new one for the next encryption round.
     key_schedule ke(.r(firstK[i]),
                     .k(keyForRound[i]),
                     .i((iR[i][3:0])), 
                     .x(k0[i]));
+    // Accept the left and right part of a previous message and encrypt it with the key form keysschedule. 
+    // Then return two encrypted parts of the message for the next round of encryption.
     round rou(.xl(m0[i][63:32]),    .xr(m0[i][31:0]),
               .rl(firstM[i][63:32]),.rr(firstM[i][31:0]),
               .k(keyForRound[i]));
+
+    //Module return the final result of the encryption computation  after all encryption rounds 
+    //The result passes to c0[i] on each pipeline but the correct value the module only return on the last round.
     post_processing po(.r(c0[i]), 
                        .x0(firstM[i][63:32]), 
                        .x1(firstM[i][31:0]));
@@ -96,14 +106,15 @@ generate
 endgenerate
 
 assign c = res;
-  
+
+// Initializing encrytion algorithm by rst signal from user
 always @(rst) begin
   pipline = 0;
-  start[1] = 1'b1;
+  start[1] = 1'b1;                          // set second bit to 1 when reset signal is recieved 
 end
 
 always @(k or m) begin
-  start[0] = 1'b1;
+  start[0] = 1'b1;                          // set first bit to 1 when module recieved message and key for computation
 end
 
 always @(posedge clk) begin
@@ -113,7 +124,7 @@ always @(posedge clk) begin
       // Save pre-processed key and message value for the first pipeline stage
       k0[pipline] = startK;
       m0[pipline] = startM;
-      iR[pipline] = 0;
+      iR[pipline] = 0;  // set to zero the number of rounds for the next incoming message
       pipline = pipline + 1;
     end 
 
@@ -122,7 +133,7 @@ always @(posedge clk) begin
       transfer to the next one. "For loop" used for each  
     */
     #1 for (integer i = 0;i < pipline ; i++ ) begin
-      // Transfer message and key for the 
+      // Transfer message and key for the next round and next pipline
       if (iR[i] < `N_R - 1) begin
         k0[i] = firstK[i];
         m0[i] = firstM[i];

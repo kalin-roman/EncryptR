@@ -25,7 +25,5 @@ module key_schedule( output wire [ 55 : 0 ] r,
   merge_0 mer(.r(r), .x1(r2), .x0(r3));
 
   perm_PC2 per(.r(k), .x(r));
-  // always @(r) begin
-  //   $display("ks: x= %h, r= %h, t=%d, n=%d",  x, r, ticks, n);
-  // end
+
 endmodule
