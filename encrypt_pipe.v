@@ -58,8 +58,8 @@ reg [`N_B - 1 : 0 ] c0 [0 : `N_V - 1];
 
 reg [4:0] iR [0 : `N_V - 1];                // number of rounds for message encrytion
 
-reg [ `N_B - 1 : 0 ] firstM [0 : `N_V - 1]; // to store computed message from key_schedule()
-reg [ 55: 0 ] firstK [0 : `N_V - 1];        // to store computed message from round()
+reg [ `N_B - 1 : 0 ] firstM [0 : `N_V - 1]; // to store computed message from round()
+reg [ 55: 0 ] firstK [0 : `N_V - 1];        // to store computed key from key_schedule()
 
 reg [`N_B - 1 : 0]res;                      // final result     
 
@@ -109,6 +109,7 @@ assign c = res;
 
 // Initializing encrytion algorithm by rst signal from user
 always @(rst) begin
+  res = 0;
   pipline = 0;
   start[1] = 1'b1;                          // set second bit to 1 when reset signal is recieved 
 end

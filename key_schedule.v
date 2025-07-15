@@ -12,17 +12,15 @@ module key_schedule( output wire [ 55 : 0 ] r,
 
   // Stage 1: complete this module implementation
 
-  wire [27:0] r0; 
-  wire [27:0] r1; 
-  wire [27:0] r2; 
-  wire [27:0] r3;
+  wire [55:0] res01;
+  wire [55:0] res23;
 
-  split_0 sp1(.r1(r1), .r0(r0), .x(x));
+  split_0 sp1(.r1(res01[55:28]), .r0(res01[27:0]), .x(x));
 
-  clr_28bit clr1(.r(r2), .y(i), .x(r1));
-  clr_28bit clr2(.r(r3), .y(i), .x(r0));
+  clr_28bit clr1(.r(res23[55:28]), .y(i), .x(res01[55:28]));
+  clr_28bit clr2(.r(res23[27:0]), .y(i), .x(res01[27:0]));
 
-  merge_0 mer(.r(r), .x1(r2), .x0(r3));
+  merge_0 mer(.r(r), .x1(res23[55:28]), .x0(res23[27:0]));
 
   perm_PC2 per(.r(k), .x(r));
 
