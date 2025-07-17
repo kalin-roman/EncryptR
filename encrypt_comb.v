@@ -9,10 +9,9 @@
 
 module pre_processing(input wire [ `N_K - 1 : 0 ]   k,   //  input    data: cipher key
                       input wire [ `N_B - 1 : 0 ]   m,   //  input    data:  plaintext message
-                      output wire [ 55 : 0 ]   r,
-                      output wire [ 31 : 0 ]   r0,
-                      output wire [ 31 : 0 ]   r1 ); // output    data: ciphertext message
-
+                      output wire [ 55 : 0 ]   r,    // output    data: cipher key
+                      output wire [ 31 : 0 ]   r0,   // output    data: first part of ciphertext message
+                      output wire [ 31 : 0 ]   r1 ); // output    data: second part of ciphertext message
   // Stage 2: complete this module implementation
   wire [`N_B - 1 : 0]permRes;
 
@@ -24,9 +23,9 @@ module pre_processing(input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
 endmodule
 
 
-module post_processing(input wire [ 31 : 0 ]   x0,   //  input    data: cipher key
-                       input wire [ 31 : 0 ]   x1,   //  input    data:  plaintext message
-                       output wire [ 63 : 0 ]   r); // output    data: ciphertext message
+module post_processing(input wire [ 31 : 0 ]   x0,   //  input    data:   first part of ciper message
+                       input wire [ 31 : 0 ]   x1,   //  input    data:   second part of ciper message
+                       output wire [ 63 : 0 ]   r);  //  output   data: ciphertext message
 
   // Stage 2: complete this module implementation
 
@@ -46,13 +45,13 @@ module encrypt_comb(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
 
   // Stage 2: complete this module implementation
 
-  wire [`N_B : 0] messages [0 : `N_R];
-  wire [55 : 0] keys [0 : `N_R];
-  wire [47 : 0] kForRound [0 : `N_R];
+  wire [`N_B - 1 : 0 ] messages [ 0 : `N_R ];
+  wire [ 55 : 0 ] keys [ 0 : `N_R ];
+  wire [ 47 : 0 ] kForRound [ 0 : `N_R ];
 
   pre_processing pre(
-    .r0(messages[0][31 : 0]), 
-    .r1(messages[0][63:32]), 
+    .r0(messages[0][ 31 : 0 ]), 
+    .r1(messages[0][ 63 : 32 ]), 
     .r(keys[0]),
     .m(m), 
     .k(k)
@@ -66,14 +65,14 @@ module encrypt_comb(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
         .r(keys[i]),
         .k(kForRound[i - 1]),
         .x(keys[i - 1]),
-        .i(i[3:0] - 4'b0001)
+        .i(i[ 3 : 0 ] - 4'b0001)
       );
 
       round ro(
-          .rl(messages[i][63 : 32]), 
-          .rr(messages[i][31 : 0]), 
-          .xl(messages[i - 1][63 : 32]),
-          .xr(messages[i - 1][31 : 0]),
+          .rl(messages[i][ 63 : 32 ]), 
+          .rr(messages[i][ 31 : 0 ]), 
+          .xl(messages[i - 1][ 63 : 32 ]),
+          .xr(messages[i - 1][ 31 : 0 ]),
           .k (kForRound[i - 1])
       );
     end
@@ -82,8 +81,8 @@ module encrypt_comb(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
 
   post_processing pst(
     .r(c), 
-    .x0(messages[`N_R][63 : 32]),
-    .x1(messages[`N_R][31 : 0])
+    .x0(messages[`N_R][ 63 : 32 ]),
+    .x1(messages[`N_R][ 31 : 0 ])
   );
 
 

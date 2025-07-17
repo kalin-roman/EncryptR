@@ -9,10 +9,10 @@ module f (output wire[  1 : 0 ]res,
           input wire [  3 : 0 ] y);
 
   // each four bits represent case-numbers 0, 1, 8, 15.
-  wire [15:0] zoef = 16'b0000000110001111;
+  wire [ 15 : 0 ] zoef = 16'b0000000110001111;
 
-  wire [15:0] mask; // to check y-bits with bits for each case
-  wire [3:0] cnc;   // if some bit will be 1, then case-number is found
+  wire [ 15 : 0 ] mask; // to check y-bits with bits for each case
+  wire [ 3 : 0 ] cnc;   // if some bit will be 1, then case-number is found
   wire isCase;      // if 1 then number is found, else if 0 it is not found
 
   // check y on 0000 (0)
@@ -69,12 +69,12 @@ module clr_28bit( output wire [ 27 : 0 ] r,
 
   // Stage 1: complete this module implementation
 
-  wire [1:0] shiftVal;
+  wire [ 1 : 0 ] shiftVal;
 
   f s(.res(shiftVal), .y(y));
 
-  wire [27:0] leftShift = x << shiftVal;
-  wire [27:0] rightShift = x >> (28 - shiftVal);
+  wire [ 27 : 0 ] leftShift = x << shiftVal;
+  wire [ 27 : 0 ] rightShift = x >> (28 - shiftVal);
 
   assign r = leftShift | rightShift;
 

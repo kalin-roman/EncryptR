@@ -25,7 +25,7 @@ endmodule
 
 module post_processing(input wire [ 31 : 0 ]   x0,   //  input    data:   first part of ciper message
                        input wire [ 31 : 0 ]   x1,   //  input    data:   second part of ciper message
-                       output wire [ 63 : 0 ]   r);  // output    data: ciphertext message
+                       output wire [ 63 : 0 ]   r);  //  output   data: ciphertext message
 
   wire [63 : 0] merRes;
 
@@ -55,8 +55,8 @@ module encrypt_iter(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
   wire [ `N_B - 1 : 0 ] startM;         // to store encrypted message from preprocessing
   wire [ 55 : 0 ] startK;               // to store encrypted key from preprocessing
 
-  reg [55 : 0] forKeySched;             // to pass key through rounds
-  reg [63 : 0] forRound;                // to pass message through rounds
+  reg [ 55 : 0 ] forKeySched;             // to pass key through rounds
+  reg [ 63 : 0 ] forRound;                // to pass message through rounds
 
   wire [ 47 : 0 ] roundKey;             // result of keyschedule for round module
 
@@ -64,8 +64,8 @@ module encrypt_iter(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
   Module make a pre processing of the key and plaintext message, before passing it for first round of encryption.
   It is called every CLK but first call only returns message and key for first round, the next calls will be ingnored.
   */
-  pre_processing preP(.r0(startM[31 : 0]), 
-                      .r1(startM[63 : 32]), 
+  pre_processing preP(.r0(startM[ 31 : 0 ]), 
+                      .r1(startM[ 63 : 32 ]), 
                       .r(startK), 
                       .k(k),
                       .m(m));
@@ -78,15 +78,15 @@ module encrypt_iter(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
 
   // Accept the left and right part of a message and encrypt it with the key form keysschedule. 
   // Then return two encrypted parts of the message for the next round of encryption.
-  round rou(.rl(firstM[63 : 32]), .rr(firstM[31 : 0]), 
-            .xl(forRound[63 : 32]), .xr(forRound[31 : 0]), 
+  round rou(.rl(firstM[ 63 : 32 ]), .rr(firstM[ 31 : 0 ]), 
+            .xl(forRound[ 63 : 32 ]), .xr(forRound[ 31 : 0 ]), 
             .k(roundKey));
 
   //Module return the final result of the encryption computation  after all encryption rounds 
   //The result passes to C on each round but the correct value the module only return on the last round.
   post_processing postP(.r(c),
-                        .x0(firstM[63 : 32]),
-                        .x1(firstM[31 : 0]));
+                        .x0(firstM[ 63 : 32 ]),
+                        .x1(firstM[ 31 : 0 ]));
 
   assign ack = ackC;    //send signal to use if the encryption process is completed
 
