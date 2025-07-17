@@ -13,7 +13,7 @@ module f (output wire[  1 : 0 ]res,
 
   wire [ 15 : 0 ] mask; // to check y-bits with bits for each case
   wire [ 3 : 0 ] cnc;   // if some bit will be 1, then case-number is found
-  wire isCase;      // if 1 then number is found, else if 0 it is not found
+  wire isCase;          // if 1 then number is found, else if 0 it is not found
 
   // check y on 0000 (0)
   xor z3(mask[15], zoef[15], y[3]);

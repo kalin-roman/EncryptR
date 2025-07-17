@@ -49,9 +49,9 @@ module encrypt_pipe(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
   reg [1 : 0] start;                          // flag to start messages encryption 
   reg [3 : 0] pipline;                        // counter of incoming message 
 
-  reg [55 : 0] k0 [0 : `N_V - 1];             // array of keys for input paramters of key_schedule()
-  reg [`N_B - 1 : 0] m0 [0 : `N_V - 1];       // array of messages for round()
-  reg [`N_B - 1 : 0 ] c0 [0 : `N_V - 1];
+  reg [55 : 0] orgKey [0 : `N_V - 1];             // array of keys for input paramters of key_schedule()
+  reg [`N_B - 1 : 0] orgMes [0 : `N_V - 1];       // array of messages for round()
+  reg [`N_B - 1 : 0 ] finRes [0 : `N_V - 1];
 
   reg [4:0] iR [0 : `N_V - 1];                // number of rounds for message encrytion
 
@@ -86,16 +86,16 @@ module encrypt_pipe(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
       key_schedule ke(.r(firstK[i]),
                       .k(keyForRound[i]),
                       .i((iR[i][3:0])), 
-                      .x(k0[i]));
+                      .x(orgKey[i]));
       // Accept the left and right part of a previous message and encrypt it with the key form keysschedule. 
       // Then return two encrypted parts of the message for the next round of encryption.
-      round rou(.xl(m0[i][63:32]),    .xr(m0[i][31:0]),
+      round rou(.xl(orgMes[i][63:32]),    .xr(orgMes[i][31:0]),
                 .rl(firstM[i][63:32]),.rr(firstM[i][31:0]),
                 .k(keyForRound[i]));
 
       //Module return the final result of the encryption computation  after all encryption rounds 
-      //The result passes to c0[i] on each pipeline but the correct value the module only return on the last round.
-      post_processing po(.r(c0[i]), 
+      //The result passes to finRes[i] on each pipeline but the correct value the module only return on the last round.
+      post_processing po(.r(finRes[i]), 
                         .x0(firstM[i][63:32]), 
                         .x1(firstM[i][31:0]));
       end
@@ -110,8 +110,8 @@ module encrypt_pipe(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
     pipline = 0;
     start[1] = 1'b1;                          // set second bit to 1 when reset signal is recieved 
     for (integer kk = 0; kk < `N_V ; kk++) begin
-      k0[kk] = 0;
-      m0[kk] = 0;
+      orgKey[kk] = 0;
+      orgMes[kk] = 0;
       iR[kk] = 0;
     end
   end
@@ -125,8 +125,8 @@ module encrypt_pipe(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
     if(start == 2'b11) begin 
       if(pipline < `N_V) begin
         // Save pre-processed key and message value for the first pipeline stage
-        k0[pipline] = startK;
-        m0[pipline] = startM;
+        orgKey[pipline] = startK;
+        orgMes[pipline] = startM;
         iR[pipline] = 0;  // set to zero the number of rounds for the next incoming message
         pipline = pipline + 1;
       end 
@@ -138,12 +138,12 @@ module encrypt_pipe(  input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
       #1 for (integer i = 0;i < pipline ; i++ ) begin
         // Transfer message and key for the next round and next pipline
         if (iR[i] < `N_R - 1) begin
-          k0[i] = firstK[i];
-          m0[i] = firstM[i];
+          orgKey[i] = firstK[i];
+          orgMes[i] = firstM[i];
           iR[i] += 5'b00001 ; // increment number of a round for each message
         end else if (iR[i] >= `N_R) begin
           // after the last encryption round, encrypted message is ready to be passed to the user
-          res = c0[i];
+          res = finRes[i];
         end else begin
           iR[i] += 5'b00001;
         end

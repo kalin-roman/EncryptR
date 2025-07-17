@@ -16,7 +16,7 @@
 So that we can calibrate and improve the assignment in the future, give us
 a rough idea how long (in hours) you spent on it *in total*:
 
-effort : 60 hours
+effort : 65 hours
 
 ===============================================================================
 
@@ -31,7 +31,7 @@ resources is allowed *iff.* it
 Let us know any third-party source code or resources you used (if any) so
 it's clear what's your work and what isn't:
 
-[https://www.chipverify.com/] - used it to understatnd gate level design
+https://www.chipverify.com/ - used it to understatnd gate level design
 ===============================================================================
 
 4. Marking
@@ -67,6 +67,7 @@ Any other documentation, notes or comments that you think are important or
 might be easy to overlook (e.g., a subtle issue or technique in associated
 source code) should go here:
 
-[...]
+During my work on the assignment, I used GitHub to track the project's development history.
+In case you are interested in checking my development history, I can provide you with access to my private repository.
 
 ===============================================================================
