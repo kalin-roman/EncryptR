@@ -31,7 +31,7 @@ resources is allowed *iff.* it
 Let us know any third-party source code or resources you used (if any) so
 it's clear what's your work and what isn't:
 
-[https://www.chipverify.com/] - used it to understatnd gate level
+[https://www.chipverify.com/] - used it to understatnd gate level design
 ===============================================================================
 
 4. Marking

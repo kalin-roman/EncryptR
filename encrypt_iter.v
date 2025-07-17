@@ -9,11 +9,10 @@
 
 module pre_processing(input wire [ `N_K - 1 : 0 ]   k,   //  input    data: cipher key
                       input wire [ `N_B - 1 : 0 ]   m,   //  input    data:  plaintext message
-                      output wire [ 55 : 0 ]   r,
-                      output wire [ 31 : 0 ]   r0,
-                      output wire [ 31 : 0 ]   r1 ); // output    data: ciphertext message
+                      output wire [ 55 : 0 ]   r,    // output    data: cipher key
+                      output wire [ 31 : 0 ]   r0,   // output    data: first part of ciphertext message
+                      output wire [ 31 : 0 ]   r1 ); // output    data: second part of ciphertext message
 
-  // Stage 2: complete this module implementation
   wire [`N_B - 1 : 0]permRes;
 
   perm_IP permMes(.r(permRes), .x(m));
@@ -24,21 +23,15 @@ module pre_processing(input wire [ `N_K - 1 : 0 ]   k,   //  input    data: ciph
 endmodule
 
 
-module post_processing(input wire [ 31 : 0 ]   x0,   //  input    data: cipher key
-                       input wire [ 31 : 0 ]   x1,   //  input    data:  plaintext message
-                       output wire [ 63 : 0 ]   r); // output    data: ciphertext message
-
-  // Stage 2: complete this module implementation
+module post_processing(input wire [ 31 : 0 ]   x0,   //  input    data:   first part of ciper message
+                       input wire [ 31 : 0 ]   x1,   //  input    data:   second part of ciper message
+                       output wire [ 63 : 0 ]   r);  // output    data: ciphertext message
 
   wire [63 : 0] merRes;
 
   merge_2 mer(.r(merRes), .x0(x0), .x1(x1));
 
   perm_FP per(.r(r), .x(merRes));
-  // initial begin
-  //     $monitor( "merRes=%h", merRes);
-  //     $monitor( "r=%h", startK);      
-  // end
 
 endmodule
 
